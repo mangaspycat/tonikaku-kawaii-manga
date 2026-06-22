@@ -112,6 +112,46 @@
             color: var(--text-secondary);
         }
 
+        /* Chapter Loading Overlay */
+        #chapter-loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--overlay-bg);
+            z-index: 9000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s;
+        }
+
+        #chapter-loading-overlay.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .chapter-loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        .chapter-loading-text {
+            font-size: 16px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .chapter-loading-sub {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
         /* Error Screen */
         #error-screen {
             position: fixed;
@@ -673,7 +713,7 @@
 <base target="_blank">
 </head>
 <body>
-    <!-- Loading Screen -->
+    <!-- Loading Screen (initial app load) -->
     <div id="loading-screen">
         <div class="loading-spinner"></div>
         <div class="loading-text">Loading Manga Reader...</div>
@@ -681,6 +721,13 @@
             <div class="loading-progress-bar" id="loading-bar"></div>
         </div>
         <div class="loading-status" id="loading-status">Detecting repository...</div>
+    </div>
+
+    <!-- Chapter Loading Overlay (shown when switching chapters) -->
+    <div id="chapter-loading-overlay">
+        <div class="chapter-loading-spinner"></div>
+        <div class="chapter-loading-text" id="chapter-loading-text">Loading Chapter...</div>
+        <div class="chapter-loading-sub" id="chapter-loading-sub">Please wait</div>
     </div>
 
     <!-- Error Screen -->
@@ -829,6 +876,9 @@
             loadingScreen: $('loading-screen'),
             loadingBar: $('loading-bar'),
             loadingStatus: $('loading-status'),
+            chapterLoadingOverlay: $('chapter-loading-overlay'),
+            chapterLoadingText: $('chapter-loading-text'),
+            chapterLoadingSub: $('chapter-loading-sub'),
             errorScreen: $('error-screen'),
             errorTitle: $('error-title'),
             errorMessage: $('error-message'),
@@ -893,11 +943,22 @@
             if (status) els.loadingStatus.textContent = status;
         }
 
+        function showChapterLoading(title) {
+            els.chapterLoadingText.textContent = `Loading ${title}...`;
+            els.chapterLoadingSub.textContent = 'Please wait';
+            els.chapterLoadingOverlay.classList.add('visible');
+        }
+
+        function hideChapterLoading() {
+            els.chapterLoadingOverlay.classList.remove('visible');
+        }
+
         function showError(title, message) {
             els.errorTitle.textContent = title;
             els.errorMessage.textContent = message;
             els.errorScreen.classList.add('visible');
             els.loadingScreen.classList.add('hidden');
+            hideChapterLoading();
         }
 
         function hideError() {
@@ -991,14 +1052,16 @@
         async function loadChapter(index) {
             if (index < 0 || index >= state.pdfs.length) return;
 
+            // Show chapter loading overlay
+            const chapter = state.pdfs[index];
+            showChapterLoading(chapter.title);
+
             state.isLoading = true;
             state.currentChapterIndex = index;
             state.currentPage = 1;
             state.pageCache.clear();
 
-            const chapter = state.pdfs[index];
             els.chapterTitle.textContent = chapter.title;
-            setLoading(40, `Loading ${chapter.title}...`);
 
             try {
                 const loadingTask = pdfjsLib.getDocument(chapter.url);
@@ -1016,9 +1079,11 @@
 
                 state.isLoading = false;
                 els.loadingScreen.classList.add('hidden');
+                hideChapterLoading();
                 showToast(`Loaded: ${chapter.title}`, 'success');
             } catch (err) {
                 state.isLoading = false;
+                hideChapterLoading();
                 showError('Failed to Load Chapter', `Could not load "${chapter.title}". Error: ${err.message}`);
             }
         }
