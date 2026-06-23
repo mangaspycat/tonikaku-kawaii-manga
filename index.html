@@ -1,66 +1,535 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitHub File Uploader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        h1 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #a0a0a0;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            color: #fff;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #e94560;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+        .file-input-label {
+            display: block;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            text-align: center;
+            color: #a0a0a0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .file-input-label:hover {
+            border-color: #e94560;
+            background: rgba(233, 69, 96, 0.1);
+        }
+        .file-input-label.has-file {
+            border-color: #00d9ff;
+            color: #00d9ff;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        .status.success {
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid #00d9ff;
+            color: #00d9ff;
+            display: block;
+        }
+        .status.error {
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid #e94560;
+            color: #e94560;
+            display: block;
+        }
+        .status.loading {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid #ffc107;
+            color: #ffc107;
+            display: block;
+        }
+        .info-box {
+            background: rgba(0, 217, 255, 0.05);
+            border-left: 4px solid #00d9ff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 10px 10px 0;
+        }
+        .info-box p {
+            color: #a0d2eb;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .info-box strong {
+            color: #00d9ff;
+        }
+        .toggle-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .toggle-btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #a0a0a0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .toggle-btn.active {
+            border-color: #e94560;
+            color: #e94560;
+            background: rgba(233, 69, 96, 0.1);
+        }
+        .hidden {
+            display: none !important;
+        }
+        .file-list {
+            margin-top: 10px;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 5px;
+            color: #fff;
+            font-size: 13px;
+        }
+        .file-item button {
+            background: #e94560;
+            border: none;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-bar.active {
+            display: block;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+    </style>
+<base target="_blank">
 </head>
 <body>
+    <div class="container">
+        <h1>📁 GitHub File Uploader</h1>
+        <p class="subtitle">Repository: mangaspycat/tonikaku-kawaii-manga</p>
 
-    <h2>Upload Files to GitHub</h2>
+        <div class="info-box">
+            <p><strong>নির্দেশনা:</strong><br>
+            • ফাইলের path দিন (যেমন: chapters/chapter1.md)<br>
+            • Text লিখুন অথবা File upload করুন<br>
+            • "Upload to GitHub" বাটনে ক্লিক করুন</p>
+        </div>
 
-    <input type="file" id="files" multiple>
-    <button onclick="uploadFiles()">Upload</button>
+        <div class="form-group">
+            <label>📂 File Path (Repository-তে কোথায় সেভ হবে)</label>
+            <input type="text" id="filePath" placeholder="যেমন: manga/chapter1/page1.jpg" value="">
+        </div>
 
-    <p id="status"></p>
+        <div class="toggle-group">
+            <div class="toggle-btn active" onclick="switchMode('text')" id="btnText">✏️ Text লিখুন</div>
+            <div class="toggle-btn" onclick="switchMode('file')" id="btnFile">📎 File Upload</div>
+        </div>
 
-<script>
-const GITHUB_TOKEN = "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";
-const OWNER = "mangaspycat";
-const REPO = "tonikaku-kawaii-manga";
-const BRANCH = "main";
+        <!-- Text Mode -->
+        <div id="textMode">
+            <div class="form-group">
+                <label>📝 Content</label>
+                <textarea id="fileContent" placeholder="এখানে আপনার টেক্সট লিখুন..."></textarea>
+            </div>
+        </div>
 
-async function uploadFiles() {
-    const files = document.getElementById('files').files;
+        <!-- File Mode -->
+        <div id="fileMode" class="hidden">
+            <div class="form-group">
+                <label>📤 ফাইল নির্বাচন করুন</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" multiple onchange="handleFileSelect(event)">
+                    <label for="fileInput" class="file-input-label" id="fileLabel">
+                        📎 ফাইল ড্র্যাগ করুন অথবা ক্লিক করুন
+                    </label>
+                </div>
+                <div class="file-list" id="fileList"></div>
+            </div>
+        </div>
 
-    for (const file of files) {
-        const content = await fileToBase64(file);
+        <div class="form-group">
+            <label>💬 Commit Message (Optional)</label>
+            <input type="text" id="commitMsg" placeholder="যেমন: Added new chapter" value="Update via GitHub Uploader">
+        </div>
 
-        const response = await fetch(
-            `https://api.github.com/repos/${OWNER}/${REPO}/contents/uploads/${file.name}`,
-            {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: `Upload ${file.name}`,
-                    content: content,
-                    branch: BRANCH
-                })
-            }
-        );
+        <button class="btn" id="uploadBtn" onclick="uploadToGitHub()">
+            🚀 Upload to GitHub
+        </button>
 
-        if (response.ok) {
-            document.getElementById('status').innerHTML += `<br>${file.name} uploaded successfully`;
-        } else {
-            document.getElementById('status').innerHTML += `<br>Failed to upload ${file.name}`;
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        const TOKEN = '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';
+        const USERNAME = 'mangaspycat';
+        const REPO = 'tonikaku-kawaii-manga';
+
+        let selectedFiles = [];
+        let currentMode = 'text';
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('btnText').classList.toggle('active', mode === 'text');
+            document.getElementById('btnFile').classList.toggle('active', mode === 'file');
+            document.getElementById('textMode').classList.toggle('hidden', mode !== 'text');
+            document.getElementById('fileMode').classList.toggle('hidden', mode !== 'file');
         }
-    }
-}
 
-function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
+        function handleFileSelect(event) {
+            selectedFiles = Array.from(event.target.files);
+            updateFileList();
+        }
 
-        reader.onload = () => {
-            resolve(reader.result.split(',')[1]);
-        };
+        function updateFileList() {
+            const list = document.getElementById('fileList');
+            const label = document.getElementById('fileLabel');
 
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
-</script>
+            if (selectedFiles.length === 0) {
+                list.innerHTML = '';
+                label.classList.remove('has-file');
+                label.textContent = '📎 ফাইল ড্র্যাগ করুন অথবা ক্লিক করুন';
+                return;
+            }
 
+            label.classList.add('has-file');
+            label.textContent = `✅ ${selectedFiles.length} টি ফাইল নির্বাচিত`;
+
+            list.innerHTML = selectedFiles.map((file, index) => `
+                <div class="file-item">
+                    <span>${file.name} (${(file.size / 1024).toFixed(1)} KB)</span>
+                    <button onclick="removeFile(${index})">❌</button>
+                </div>
+            `).join('');
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        function setStatus(message, type) {
+            const status = document.getElementById('status');
+            status.className = 'status ' + type;
+            status.innerHTML = message;
+        }
+
+        function setProgress(percent) {
+            const bar = document.getElementById('progressBar');
+            const fill = document.getElementById('progressFill');
+            bar.classList.add('active');
+            fill.style.width = percent + '%';
+        }
+
+        async function getFileSha(path) {
+            try {
+                const response = await fetch(
+                    `https://api.github.com/repos/${USERNAME}/${REPO}/contents/${path}`,
+                    {
+                        headers: {
+                            'Authorization': `token ${TOKEN}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    }
+                );
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.sha;
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function uploadSingleFile(filePath, content, message) {
+            const sha = await getFileSha(filePath);
+
+            const body = {
+                message: message,
+                content: content
+            };
+
+            if (sha) {
+                body.sha = sha;
+            }
+
+            const response = await fetch(
+                `https://api.github.com/repos/${USERNAME}/${REPO}/contents/${filePath}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                }
+            );
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Upload failed');
+            }
+
+            return await response.json();
+        }
+
+        async function uploadToGitHub() {
+            const filePath = document.getElementById('filePath').value.trim();
+            const commitMsg = document.getElementById('commitMsg').value.trim() || 'Update via GitHub Uploader';
+            const btn = document.getElementById('uploadBtn');
+
+            if (!filePath) {
+                setStatus('❌ দয়া করে File Path দিন!', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            setStatus('⏳ Uploading...', 'loading');
+            setProgress(10);
+
+            try {
+                if (currentMode === 'text') {
+                    const content = document.getElementById('fileContent').value;
+                    if (!content) {
+                        setStatus('❌ দয়া করে কিছু লিখুন!', 'error');
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    setProgress(30);
+                    const base64Content = btoa(unescape(encodeURIComponent(content)));
+                    setProgress(60);
+
+                    await uploadSingleFile(filePath, base64Content, commitMsg);
+                    setProgress(100);
+
+                    setStatus(`✅ সফল! ফাইল আপলোড হয়েছে:<br>📁 <strong>${filePath}</strong><br>🔗 <a href="https://github.com/${USERNAME}/${REPO}/blob/main/${filePath}" target="_blank" style="color:#00d9ff;">GitHub-এ দেখুন</a>`, 'success');
+
+                } else {
+                    if (selectedFiles.length === 0) {
+                        setStatus('❌ দয়া করে কমপক্ষে একটি ফাইল নির্বাচন করুন!', 'error');
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    const results = [];
+                    for (let i = 0; i < selectedFiles.length; i++) {
+                        const file = selectedFiles[i];
+                        const progress = 10 + ((i + 1) / selectedFiles.length) * 80;
+                        setProgress(progress);
+
+                        setStatus(`⏳ Uploading ${i + 1}/${selectedFiles.length}: ${file.name}...`, 'loading');
+
+                        const arrayBuffer = await file.arrayBuffer();
+                        const bytes = new Uint8Array(arrayBuffer);
+                        let binary = '';
+                        for (let j = 0; j < bytes.byteLength; j++) {
+                            binary += String.fromCharCode(bytes[j]);
+                        }
+                        const base64Content = btoa(binary);
+
+                        const finalPath = selectedFiles.length === 1 ? filePath : `${filePath}/${file.name}`;
+
+                        await uploadSingleFile(finalPath, base64Content, commitMsg);
+                        results.push(finalPath);
+                    }
+
+                    setProgress(100);
+
+                    if (results.length === 1) {
+                        setStatus(`✅ সফল! ফাইল আপলোড হয়েছে:<br>📁 <strong>${results[0]}</strong><br>🔗 <a href="https://github.com/${USERNAME}/${REPO}/blob/main/${results[0]}" target="_blank" style="color:#00d9ff;">GitHub-এ দেখুন</a>`, 'success');
+                    } else {
+                        setStatus(`✅ সফল! ${results.length} টি ফাইল আপলোড হয়েছে:<br>📁 <strong>${filePath}/</strong> ফোল্ডারে<br>🔗 <a href="https://github.com/${USERNAME}/${REPO}/tree/main/${filePath}" target="_blank" style="color:#00d9ff;">GitHub-এ দেখুন</a>`, 'success');
+                    }
+
+                    selectedFiles = [];
+                    updateFileList();
+                }
+
+                document.getElementById('filePath').value = '';
+                document.getElementById('fileContent').value = '';
+
+            } catch (error) {
+                console.error(error);
+                setStatus(`❌ Error: ${error.message}<br><small>সম্ভবত Token-এর সমস্যা অথবা Repository access নেই</small>`, 'error');
+            } finally {
+                btn.disabled = false;
+                setTimeout(() => {
+                    document.getElementById('progressBar').classList.remove('active');
+                    document.getElementById('progressFill').style.width = '0%';
+                }, 2000);
+            }
+        }
+
+        // Drag and drop support
+        const fileLabel = document.getElementById('fileLabel');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, () => {
+                fileLabel.style.borderColor = '#e94560';
+                fileLabel.style.background = 'rgba(233, 69, 96, 0.1)';
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, () => {
+                fileLabel.style.borderColor = '';
+                fileLabel.style.background = '';
+            }, false);
+        });
+
+        fileLabel.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            selectedFiles = Array.from(files);
+            updateFileList();
+        }, false);
+    </script>
 </body>
 </html>
