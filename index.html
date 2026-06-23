@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>GitHub ফাইল আপলোডার</h2>
+    <input type="file" id="fileInput">
+    <button onclick="uploadFile()">আপলোড করুন</button>
+
+    <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                const content = btoa(e.target.result); // Base64 এনকোডিং
+                const repo = "tonikaku-kawaii-manga";
+                const owner = "mangaspycat";
+                const path = file.name;
+                const token = "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"; // এখানে নতুন টোকেন দিন
+
+                const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: "ফাইল আপলোড করা হয়েছে",
+                        content: content
+                    })
+                });
+
+                if (response.ok) {
+                    alert("সফলভাবে আপলোড হয়েছে!");
+                } else {
+                    alert("আপলোডে সমস্যা হয়েছে।");
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+    </script>
+</body>
+</html>
