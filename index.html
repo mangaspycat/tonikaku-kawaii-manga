@@ -1,45 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub File Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        textarea { width: 100%; max-width: 400px; padding: 10px; margin-bottom: 10px; }
+        button { padding: 10px 20px; background-color: #2ea44f; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #22863a; }
+        #status { margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
 <body>
-    <h2>GitHub ফাইল আপলোডার</h2>
-    <input type="file" id="fileInput">
-    <button onclick="uploadFile()">আপলোড করুন</button>
+
+    <h2>গিটহাবে ফাইল সেভ করুন</h2>
+    <p>নিচের বক্সে কিছু লিখুন এবং বাটনে ক্লিক করে গিটহাবে সেভ করুন:</p>
+    
+    <textarea id="fileContent" rows="5" placeholder="এখানে আপনার ফাইলের বিষয়বস্তু লিখুন..."></textarea><br>
+    <button onclick="uploadToGitHub()">ফাইল সেভ করুন</button>
+    
+    <p id="status"></p>
 
     <script>
-        async function uploadFile() {
-            const fileInput = document.getElementById('fileInput');
-            const file = fileInput.files[0];
-            const reader = new FileReader();
+        async function uploadToGitHub() {
+            const statusText = document.getElementById('status');
+            statusText.innerText = "⏳ আপলোড হচ্ছে...";
+            statusText.style.color = "blue";
 
-            reader.onload = async function(e) {
-                const content = btoa(e.target.result); // Base64 এনকোডিং
-                const repo = "tonikaku-kawaii-manga";
-                const owner = "mangaspycat";
-                const path = file.name;
-                const token = "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"; // এখানে নতুন টোকেন দিন
+            // ⚠️ আপনার গিটহাবের তথ্য এখানে দিন
+            const token = 'YOUR_GITHUB_PERSONAL_ACCESS_TOKEN'; // আপনার টোকেন
+            const owner = 'YOUR_USERNAME'; // গিটহাব ইউজারনেম
+            const repo = 'YOUR_REPOSITORY_NAME'; // রিপোজিটরির নাম
+            const path = 'my-new-file.txt'; // যে নামে ফাইল সেভ করতে চান
 
-                const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+            const content = document.getElementById('fileContent').value;
+            
+            // গিটহাব API Base64 ফরম্যাটে ডেটা নেয়, তাই টেক্সটকে এনকোড করতে হবে
+            const base64Content = btoa(unescape(encodeURIComponent(content)));
 
+            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+            try {
                 const response = await fetch(url, {
                     method: 'PUT',
                     headers: {
-                        'Authorization': `token ${token}`,
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        message: "ফাইল আপলোড করা হয়েছে",
-                        content: content
+                        message: 'API এর মাধ্যমে নতুন ফাইল যোগ করা হলো', // কমিট মেসেজ
+                        content: base64Content
                     })
                 });
 
                 if (response.ok) {
-                    alert("সফলভাবে আপলোড হয়েছে!");
+                    statusText.innerText = "✅ ফাইল সফলভাবে গিটহাবে স্টোর হয়েছে!";
+                    statusText.style.color = "green";
                 } else {
-                    alert("আপলোডে সমস্যা হয়েছে।");
+                    const errorData = await response.json();
+                    statusText.innerText = "❌ এরর: " + errorData.message;
+                    statusText.style.color = "red";
                 }
-            };
-            reader.readAsBinaryString(file);
+            } catch (error) {
+                statusText.innerText = "❌ নেটওয়ার্ক বা অন্য কোনো সমস্যা হয়েছে!";
+                statusText.style.color = "red";
+            }
         }
     </script>
+
 </body>
 </html>
